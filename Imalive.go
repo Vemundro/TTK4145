@@ -27,7 +27,7 @@ func main(){
     lisconn, err := net.ListenUDP("udp", os.Args[2])
     go for {
         _, err = conn.Write([]byte("anything"))
-        time.sleep(5 * time.Second())
+        time.Sleep(5 * time.Second())
     }
     go for {
         var buf [512]byte
