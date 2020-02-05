@@ -30,11 +30,15 @@ func main(){
     checkError(err)
 
 
-    _, err = conn.Write([]byte("anything"))
-    time.Sleep(5* time.Second)  
+    go func(){
+        _, err = conn.Write([]byte("anything"))
+        time.Sleep(5* time.Second)  
+    }()
 
-    var buf [512]byte
-    n, err := lisconn.Read(buf[0:])
-    checkError(err)
-    fmt.Println(string(buf[0:n]))
+    go func(){
+        var buf [512]byte
+        n, err := lisconn.Read(buf[0:])
+        checkError(err)
+        fmt.Println(string(buf[0:n]))
+    }()
 }
