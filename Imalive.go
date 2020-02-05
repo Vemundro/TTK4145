@@ -29,7 +29,7 @@ func main(){
     lisconn, err := net.ListenUDP("udp", lisAddr)
     checkError(err)
 
-
+    var buf [512]byte
     go func(){
         for{
             _, err = conn.Write([]byte("anything"))
@@ -39,7 +39,6 @@ func main(){
 
     go func(){
         for {
-            var buf [512]byte
             n, err := lisconn.Read(buf[0:])
             checkError(err)
             fmt.Println(string(buf[0:n]))
