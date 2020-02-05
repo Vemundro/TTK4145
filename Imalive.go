@@ -15,7 +15,7 @@ func checkError(err error) {
 }
 
 func main(){
-	if len(os.Args) != 2 {
+	if len(os.Args) != 3 {
         fmt.Fprintf(os.Stderr, "Usage: %s host:port", os.Args[0])
         os.Exit(1)
     }
@@ -24,15 +24,17 @@ func main(){
     checkError(err)
     conn, err := net.DialUDP("udp", nil, udpAddr)
     checkError(err)
-    lisconn, err := net.ListenUDP("udp", os.Args[2])
-    go for {
-        _, err = conn.Write([]byte("anything"))
-        time.Sleep(5 * time.Second())
-    }
-    go for {
-        var buf [512]byte
-        n, err := lisconn.Read(buf[0:])
-        checkError(err)
-        fmt.Println(string(buf[0:n]))
-    }
+    lisAddr, err := net.ResolveUDPAddr("udp4", os.Args[2])
+    checkError(err)
+    lisconn, err := net.ListenUDP("udp", lisAddr)
+    checkError(err)
+
+
+    _, err = conn.Write([]byte("anything"))
+    time.Sleep(5* time.Second)  
+
+    var buf [512]byte
+    n, err := lisconn.Read(buf[0:])
+    checkError(err)
+    fmt.Println(string(buf[0:n]))
 }
