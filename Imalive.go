@@ -31,14 +31,18 @@ func main(){
 
 
     go func(){
-        _, err = conn.Write([]byte("anything"))
-        time.Sleep(5* time.Second)  
+        for{
+            _, err = conn.Write([]byte("anything"))
+            time.Sleep(5* time.Second)
+        }  
     }()
 
     go func(){
-        var buf [512]byte
-        n, err := lisconn.Read(buf[0:])
-        checkError(err)
-        fmt.Println(string(buf[0:n]))
+        for {
+            var buf [512]byte
+            n, err := lisconn.Read(buf[0:])
+            checkError(err)
+            fmt.Println(string(buf[0:n]))
+        }
     }()
 }
