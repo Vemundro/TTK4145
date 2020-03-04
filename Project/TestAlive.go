@@ -5,12 +5,16 @@ import(
 )
 
 const elevators = 2
+const elevatorID = 1
 
 
 
 func main() {
 	go alive.CheckElevatorStatus()
 	go alive.StartStatusUpdate(elevators)
+	go alive.BroadcastAlive(elevatorID)
 
-	alive.BroadcastAlive(1)
+	for {
+
+	}
 }
