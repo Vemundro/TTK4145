@@ -7,28 +7,29 @@ import(
 	"os"
 )
 
-/*
-To use this package, start two goroutines in your main function. 
-One for CheckElevatorStatus() and one for StartStatusUpdate() which needs your timeout delay and number of elevators as arguments
-CheckElevatorStatus() is constantly listening for other nodes broadcast, and when it recieves one it will update the Status which is maintained in StartStatusUpdate()
-StartStatusUpdate() checks the status array every n seconds and notifies you if one elevator times out
-*/
-
+//Simple error funtion that will be reused alot for every UDP action
 func checkErrorAlive(err error) {
     if err != nil {
         fmt.Fprintf(os.Stderr, "Fatal error ", err.Error())
     }
 }
 
+//Broadcasts to the other elevators that it's alive
 func BroadcastAlive(elevatorID int){
-	udpAddr, err := net.ResolveUDPAddr("udp4", "255.255.255.255:20345")
-    checkErrorAlive(err)
-    conn, err := net.DialUDP("udp", nil, udpAddr)
-    checkErrorAlive(err)
-	_, err = conn.Write([]byte(elevatorID))
-	checkErrorAlive(err)
+	for{
+		msg := []byte{byte(elevatorID)}
+		fmt.Println(msg)
+		udpAddr, err := net.ResolveUDPAddr("udp4", "255.255.255.255:20345")
+	    checkErrorAlive(err)
+	    conn, err := net.DialUDP("udp", nil, udpAddr)
+	    checkErrorAlive(err)
+		_, err = conn.Write([]byte("Hei"))
+		checkErrorAlive(err)
+		time.Sleep(time.Second)
+	}
 }
 
+//Creates a UDP connection and sends it to updateStatus
 func CheckElevatorStatus(){
 	lisAddr, err := net.ResolveUDPAddr("udp4", ":20345")
 	checkErrorAlive(err)
@@ -41,17 +42,23 @@ func CheckElevatorStatus(){
 
 }
 
+//Reads the UDP messages and fills channel c with it
 func updateStatus(conn *net.UDPConn) {
 	c := make(chan int)
-	var message int
+	var message []byte
 
-	_, addr, err := conn.ReadFromUDP(message)
+	_, _, err := conn.ReadFromUDP(message)
 	checkErrorAlive(err)
-	c <- message
+	if message != nil {
+		intMessage := int(message[0])
+		fmt.Println(message)
+		c <- intMessage
+	}
 }
 
+//Initializes the continous status check function and keeps tabs on incoming messages
 func StartStatusUpdate(elevators int){
-	var status [elevators-1]int
+	status := make([]int, elevators-1)
 	statusChan := make(chan []int)
 	recieveChan := make(chan []int)
 	c := make(chan int)
@@ -67,31 +74,35 @@ func StartStatusUpdate(elevators int){
 
 }
 
+//Checks every 10 seconds wether or not an elevator is dead and alerts if one of them is
 func statusUpdate(elevators int, rChan chan []int, sChan chan []int){
-	var status [elevators-1]int
-	var alert [elevators-1]int
+	status := make([]int, elevators)
+	alert := make([]int, elevators)
 	alertChan := make(chan []int)
 
-	for index, element := range alert{
+	for index, _ := range alert{
 		alert[index] = 0
 	}
 
 	for {
 		time.Sleep(10 *time.Second)
-		status <- sChan
-		for index, element := range status {
+		status = <- sChan
+		fmt.Println(status)
+		for index, _ := range status {
 			if status[index] == 0 {
 				alert[index] += 1
+				fmt.Println(alert)
+			}
+			if status[index] == 1{
+				alert[index] == 0
 			}
 			if alert[index] == 2{
 				alertChan <- alert
+				fmt.Println(alert)
 				time.Sleep(time.Second)
-				alert <- alertChan
+				alert = <- alertChan
 			}
 		}
-		for index, element := range status {
-			status[index] = 0
-		}
-		rChan <- status
+
 	}
 }
